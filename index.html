@@ -80,189 +80,301 @@ var st,ct,ut,lt,dt,ht,pt,gt,ft,mt=function(){function t(e,t,r){this.networkInter
 
 </script>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <style>
   :root {
     --navy: #0a1f5c;
-    --navy-dark: #081848;
-    --purple: #7a3ff2;
-    --purple-dark: #6a2fe0;
-    --line: #e3e3e8;
-    --text: #1c1c22;
-    --muted: #6a6a78;
-    --row-hover: #f5f3ff;
-    --bg: #fbfbfd;
+    --navy-2: #0d2569;
+    --navy-dark: #07163f;
+    --accent: #6a2fb5;
+    --accent-dark: #5a2399;
+    --accent-soft: #f0e9f8;
+    --line: #d9d9e1;
+    --line-soft: #ececf1;
+    --text: #20202a;
+    --text-2: #54545f;
+    --text-3: #83838f;
+    --bg: #eef0f4;
+    --surface: #ffffff;
+    --row-hover: #f4f1fa;
+    --radius: 4px;
+    --radius-sm: 3px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
   body {
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
     color: var(--text);
     background: var(--bg);
     font-size: 14px;
+    line-height: 1.45;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Header */
   .header {
     background: var(--navy);
     color: #fff;
-    text-align: center;
-    padding: 22px 16px;
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 28px; height: 64px; flex-shrink: 0; position: relative;
   }
+  .header h1 { font-size: 21px; font-weight: 600; letter-spacing: -.2px; text-align: center; }
 
-  .shell { display: flex; min-height: calc(100vh - 68px); }
+  .shell { flex: 1; display: flex; min-height: 0; }
 
-  /* Left nav */
   .nav {
-    width: 230px;
-    flex-shrink: 0;
-    padding: 20px 16px;
-    border-right: 1px solid var(--line);
+    width: 268px; flex-shrink: 0; padding: 16px 14px;
+    background: var(--surface); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; overflow-y: auto;
   }
   .nav button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; gap: 13px;
+    width: 100%; text-align: left;
+    background: transparent; border: none; border-radius: var(--radius-sm);
+    padding: 15px 16px 15px 18px; margin-bottom: 5px;
+    font-family: inherit; font-size: 15px; font-weight: 500; line-height: 1.3;
+    color: var(--text-2); cursor: pointer;
+    transition: background .16s ease, color .16s ease, padding-left .16s ease;
+    overflow: hidden;
   }
-  .nav button.active { background: var(--purple); color: #fff; border-color: var(--purple); }
-  .nav .count { margin-top: 30px; text-align: center; color: var(--muted); font-weight: 600; }
+  .nav button span { flex: 1; min-width: 0; }
+  /* left rail accent — full only on the active item */
+  .nav button::before {
+    content: ""; position: absolute; left: 0; top: 50%;
+    width: 3px; height: 0; transform: translateY(-50%);
+    background: var(--accent); border-radius: 0 3px 3px 0;
+    transition: height .18s ease;
+  }
+  .nav button i {
+    font-size: 19px; color: var(--text-3);
+    transition: color .16s ease, transform .16s ease;
+    flex-shrink: 0;
+  }
+  .nav button:hover {
+    background: var(--bg); color: var(--text);
+    padding-left: 22px;
+  }
+  .nav button:hover i { color: var(--accent); transform: scale(1.08); }
+  .nav button:active { transform: translateY(1px); }
+  .nav button.active {
+    background: var(--accent-soft); color: var(--accent-dark); font-weight: 600;
+    padding-left: 20px;
+  }
+  .nav button.active::before { height: 100%; border-radius: 0; }
+  .nav button.active i { color: var(--accent-dark); }
+  .nav .count {
+    margin-top: auto; padding: 14px 8px 4px;
+    color: var(--text-2); font-size: 13px; font-weight: 600; text-align: center;
+  }
+  .nav .count b { color: var(--text); }
 
-  /* Main */
-  .main { flex: 1; padding: 22px 26px; overflow: hidden; }
+  .main { flex: 1; min-width: 0; padding: 20px 24px; display: flex; flex-direction: column; overflow: hidden; }
 
-  /* Filter bar */
   .filters {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr;
-    gap: 14px 22px;
-    align-items: end;
-    margin-bottom: 22px;
+    display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 14px; align-items: end; margin-bottom: 16px; flex-shrink: 0;
   }
-  .field label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px; }
+  .field label {
+    display: block; font-weight: 700; margin-bottom: 6px;
+    font-size: 13px; color: var(--text-2);
+  }
   .field select, .field input {
-    width: 100%;
-    padding: 9px 11px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    background: #f3f3f6;
-    font-size: 14px;
+    width: 100%; height: 40px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--surface); font-family: inherit; font-size: 14px; color: var(--text);
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .field input::placeholder { color: var(--text-3); }
+  .field select:focus, .field input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(106,47,181,.16);
+  }
+  .field.search { position: relative; }
+  .field.search input { padding-left: 36px; }
+  .field.search .s-ico {
+    position: absolute; left: 12px; bottom: 11px; font-size: 17px;
+    color: var(--text-3); pointer-events: none;
   }
 
-  /* Table */
-  .table-wrap { overflow: auto; max-height: calc(100vh - 250px); border-top: 1px solid var(--line); }
+  .table-card {
+    flex: 1; min-height: 0; background: var(--surface);
+    border: 1px solid var(--line); border-radius: var(--radius);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .table-wrap { overflow: auto; flex: 1; }
   table { width: 100%; border-collapse: collapse; }
   thead th {
-    position: sticky; top: 0;
-    background: #fff;
-    text-align: left;
-    padding: 12px 10px;
-    font-weight: 700;
-    color: #4a4a55;
+    position: sticky; top: 0; z-index: 1; background: #f6f6f9;
+    text-align: left; padding: 13px 14px;
+    font-weight: 500; font-size: 13px; color: var(--text-2);
     border-bottom: 1px solid var(--line);
-    cursor: pointer;
-    white-space: nowrap;
+    cursor: pointer; white-space: nowrap; user-select: none;
   }
-  thead th .arrow { color: var(--purple); font-size: 11px; }
-  tbody td { padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  tbody tr { cursor: pointer; }
+  thead th:hover { color: var(--text); }
+  thead th .arrow { color: var(--accent); font-size: 11px; margin-left: 3px; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; font-size: 14px; }
+  tbody tr { cursor: pointer; transition: background .1s; }
+  tbody tr:last-child td { border-bottom: none; }
   tbody tr:hover { background: var(--row-hover); }
-  .status-pill { font-size: 12px; color: var(--muted); }
-  .open-link {
-    color: var(--purple); font-weight: 600; text-decoration: none;
-    border: 1px solid var(--line); border-radius: 4px; padding: 5px 12px; font-size: 13px;
-  }
-  .open-link:hover { background: var(--purple); color: #fff; }
+  td.col-title { font-weight: 600; color: var(--text); }
 
-  /* States */
-  .state { padding: 60px 20px; text-align: center; color: var(--muted); }
-  .state h3 { color: var(--text); font-weight: 700; margin-bottom: 8px; }
+  .empty-row td { padding: 0 !important; border-bottom: none !important; cursor: default; }
+  .empty-row:hover { background: transparent; }
+  .empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 64px 24px; color: var(--text-2);
+  }
+  .empty i { font-size: 40px; color: var(--text-3); margin-bottom: 14px; }
+  .empty h4 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty p { font-size: 13.5px; color: var(--text-2); max-width: 380px; line-height: 1.55; }
+
+  .pill {
+    display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 3px;
+    font-size: 12.5px; font-weight: 600; white-space: nowrap; background: var(--bg); color: var(--text-2);
+  }
+  .pill.inuse { background: #e2f0e7; color: #1c6b41; }
+  .pill.review { background: #fbeed5; color: #875309; }
+  .pill.draft { background: #e9e4f3; color: #54479b; }
+
+  .open-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--accent-dark); font-weight: 600; text-decoration: none;
+    border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 6px 13px; font-size: 13px; background: var(--surface);
+    transition: background .12s, border-color .12s;
+  }
+  .open-link:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  .state { margin: auto; text-align: center; color: var(--text-2); padding: 50px 20px; max-width: 520px; }
+  .state h3 { color: var(--text); font-weight: 700; font-size: 18px; margin-bottom: 8px; }
+  .state p { font-size: 14px; color: var(--text-2); }
   .spinner {
-    width: 34px; height: 34px; border: 3px solid var(--line);
-    border-top-color: var(--purple); border-radius: 50%;
-    margin: 0 auto 18px; animation: spin 0.8s linear infinite;
+    width: 32px; height: 32px; border: 3px solid var(--line);
+    border-top-color: var(--accent); border-radius: 50%;
+    margin: 0 auto 18px; animation: spin .8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  .signin-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 40px 36px;
+  }
   .signin-btn {
-    background: var(--navy); color: #fff; border: none; border-radius: 6px;
-    padding: 13px 26px; font-size: 15px; font-weight: 600; cursor: pointer;
+    background: var(--navy); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 12px 26px; font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    transition: background .12s;
   }
   .signin-btn:hover { background: var(--navy-dark); }
+  .signin-btn:active { transform: translateY(1px); }
 
-  /* Detail panel (slide-over) */
   .overlay {
-    position: fixed; inset: 0; background: rgba(10,20,40,0.45);
-    display: none; z-index: 50;
+    position: fixed; inset: 0; background: rgba(12,16,38,.42);
+    opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50;
   }
-  .overlay.show { display: block; }
+  .overlay.show { opacity: 1; pointer-events: auto; }
   .panel {
-    position: fixed; top: 0; right: 0; bottom: 0; width: min(880px, 94vw);
-    background: #fff; z-index: 51; transform: translateX(100%);
-    transition: transform 0.25s ease; display: flex; flex-direction: column;
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(840px, 94vw);
+    background: var(--surface); z-index: 51; transform: translateX(100%);
+    transition: transform .24s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column; box-shadow: -6px 0 24px rgba(12,16,38,.18);
   }
   .panel.show { transform: translateX(0); }
-  .panel-head { background: var(--navy); color: #fff; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; }
-  .panel-head .x { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
-  .tabs { display: flex; gap: 8px; padding: 14px 22px 0; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
-  .tabs button {
-    background: #fff; border: 1px solid var(--line); border-bottom: none;
-    border-radius: 6px 6px 0 0; padding: 10px 16px; font-weight: 600; cursor: pointer; font-size: 13px;
+  .panel-head {
+    background: var(--navy); color: #fff;
+    padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
   }
-  .tabs button.active { background: var(--purple); color: #fff; border-color: var(--purple); }
-  .tab-body { padding: 22px; overflow: auto; flex: 1; }
-  .detail-row { display: grid; grid-template-columns: 220px 1fr; padding: 11px 0; border-bottom: 1px solid #f0f0f3; gap: 16px; }
-  .detail-row .k { font-weight: 700; color: #3a3a44; }
-  .detail-row .v { color: var(--text); }
+  .panel-head .pt { font-weight: 600; font-size: 16px; }
+  .panel-head .x {
+    background: rgba(255,255,255,.14); border: none; color: #fff;
+    width: 30px; height: 30px; border-radius: 3px; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: background .12s;
+  }
+  .panel-head .x:hover { background: rgba(255,255,255,.26); }
+  .tabs {
+    display: flex; gap: 4px; padding: 0 16px;
+    flex-wrap: wrap; border-bottom: 1px solid var(--line); flex-shrink: 0; background: #f6f6f9;
+  }
+  .tabs button {
+    background: transparent; border: none; border-bottom: 3px solid transparent; border-radius: 0;
+    padding: 14px 16px; margin-bottom: -1px;
+    font-family: inherit; font-weight: 600; font-size: 13.5px; color: var(--text-2);
+    cursor: pointer; transition: color .12s, border-color .12s, background .12s;
+  }
+  .tabs button:hover { color: var(--text); background: rgba(0,0,0,.025); }
+  .tabs button.active { color: var(--accent-dark); border-bottom-color: var(--accent); background: var(--surface); }
+  .tab-body { padding: 22px 24px; overflow: auto; flex: 1; }
+  .detail-row {
+    display: grid; grid-template-columns: 210px 1fr;
+    padding: 12px 0; border-bottom: 1px solid var(--line-soft); gap: 18px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .k { font-weight: 700; color: var(--text-2); font-size: 13.5px; }
+  .detail-row .v { color: var(--text); font-size: 14px; }
   .open-big {
     display: inline-flex; align-items: center; gap: 8px;
-    border: 1px solid var(--line); border-radius: 6px; padding: 14px 28px;
-    color: var(--purple); font-weight: 700; text-decoration: none; font-size: 16px;
+    border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 13px 26px;
+    color: var(--accent-dark); font-weight: 700; text-decoration: none; font-size: 15px;
+    background: var(--surface); transition: background .12s, border-color .12s;
   }
-  .open-big:hover { background: var(--purple); color: #fff; }
-  .yn-yes { color: #0f6e56; font-weight: 700; }
-  .yn-no  { color: #a32d2d; font-weight: 700; }
-  .muted-note { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .open-big:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .yn-yes { color: #1c6b41; font-weight: 700; }
+  .yn-no  { color: #b23636; font-weight: 700; }
+  .muted-note {
+    color: var(--text-2); font-size: 13.5px; line-height: 1.6;
+    background: var(--bg); border: 1px solid var(--line-soft); border-radius: var(--radius-sm); padding: 12px 14px;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 11px 24px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .12s;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:active { transform: translateY(1px); }
+
+  .table-wrap::-webkit-scrollbar, .tab-body::-webkit-scrollbar, .nav::-webkit-scrollbar { width: 12px; height: 12px; }
+  .table-wrap::-webkit-scrollbar-thumb, .tab-body::-webkit-scrollbar-thumb, .nav::-webkit-scrollbar-thumb {
+    background: #c4c4cf; border-radius: 8px; border: 3px solid var(--surface);
+  }
+  .table-wrap::-webkit-scrollbar-thumb:hover, .tab-body::-webkit-scrollbar-thumb:hover { background: #aeaebb; }
 </style>
 </head>
 <body>
 
-<div class="header">Electronic Documents and Records Management System (EDRMS)</div>
+<div class="header">
+  <h1>Electronic Documents and Records Management System (EDRMS)</h1>
+</div>
 
 <div class="shell">
   <nav class="nav">
-    <button class="active">Documents</button>
-    <button onclick="alert('My Actions — to be wired next')">My Actions</button>
-    <button onclick="alert('Areas — to be wired next')">Areas</button>
-    <button onclick="alert('Request to create new Document — to be wired next')">Request to create new Document</button>
-    <button onclick="alert('Procedure — to be wired next')">Procedure</button>
-    <button onclick="alert('Process Flow — to be wired next')">Process Flow</button>
-    <button onclick="alert('Training — to be wired next')">Training</button>
+    <button onclick="alert('EDRMS Home — to be wired next')"><i class="ti ti-home"></i><span>EDRMS Home</span></button>
+    <button class="active"><i class="ti ti-files"></i><span>Documents</span></button>
+    <button onclick="alert('My Actions — to be wired next')"><i class="ti ti-checklist"></i><span>My Actions</span></button>
+    <button onclick="alert('Areas — to be wired next')"><i class="ti ti-layout-grid"></i><span>Areas</span></button>
+    <button onclick="alert('Request to create new Document — to be wired next')"><i class="ti ti-file-plus"></i><span>Request to create new Document</span></button>
+    <button onclick="alert('Procedure — to be wired next')"><i class="ti ti-list-details"></i><span>Procedure</span></button>
+    <button onclick="alert('Process Flow — to be wired next')"><i class="ti ti-share-2"></i><span>Process Flow</span></button>
+    <button onclick="alert('Training — to be wired next')"><i class="ti ti-school"></i><span>Training</span></button>
     <div class="count" id="docCount"></div>
   </nav>
 
   <main class="main" id="main">
     <!-- Sign-in state shown first -->
     <div class="state" id="signinState">
-      <h3>Sign in to view your documents</h3>
-      <p style="margin-bottom:22px;">Use your Safripol Microsoft account.</p>
-      <button class="signin-btn" id="signinBtn">Sign in with Microsoft</button>
+      <div class="signin-card">
+        <h3>Sign in to view your documents</h3>
+        <p style="margin-bottom:22px;">Use your Safripol Microsoft account.</p>
+        <button class="signin-btn" id="signinBtn">Sign in with Microsoft</button>
+        <p id="signinNote" style="margin-top:16px;color:var(--text-2);max-width:440px;margin-left:auto;margin-right:auto;line-height:1.55;font-size:13px;"></p>
+      </div>
     </div>
 
     <!-- App content (hidden until signed in) -->
-    <div id="appContent" style="display:none;">
+    <div id="appContent" style="flex:1; min-height:0; display:none; flex-direction:column;">
       <div class="filters">
-        <div class="field">
+        <div class="field search">
           <label>Search</label>
+          <i class="ti ti-search s-ico"></i>
           <input type="text" id="searchBox" placeholder="Search title or file name…">
         </div>
         <div class="field">
@@ -279,13 +391,15 @@ var st,ct,ut,lt,dt,ht,pt,gt,ft,mt=function(){function t(e,t,r){this.networkInter
         </div>
       </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr id="headRow"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr id="headRow"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -307,7 +421,7 @@ var st,ct,ut,lt,dt,ht,pt,gt,ft,mt=function(){function t(e,t,r){this.networkInter
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="panel" id="panel">
   <div class="panel-head">
-    <span id="panelTitle" style="font-weight:700;font-size:16px;"></span>
+    <span class="pt" id="panelTitle"></span>
     <button class="x" onclick="closePanel()">&times;</button>
   </div>
   <div class="tabs" id="tabs"></div>
@@ -315,6 +429,14 @@ var st,ct,ut,lt,dt,ht,pt,gt,ft,mt=function(){function t(e,t,r){this.networkInter
 </div>
 
 <script>
+/* ============================================================
+   PREVIEW MODE  —  design without signing in.
+   Set to true to skip Microsoft login and open straight into
+   the app shell (empty states, no data). Set to false to
+   restore the real sign-in flow before going live.
+   ============================================================ */
+const PREVIEW_MODE = true;
+
 /* ============================================================
    CONFIG  —  these come from your Entra ID app registration
    ============================================================ */
@@ -417,6 +539,9 @@ function msalReady() {
 }
 
 async function init() {
+  // Preview mode: skip sign-in entirely and show the app shell with empty states.
+  if (PREVIEW_MODE) { startPreview(); return; }
+
   // If the login library was blocked by the network, say so plainly.
   if (window.__msalBlocked || !msalReady()) {
     showError(
@@ -453,9 +578,38 @@ async function signIn() {
     account = resp.account;
     startApp();
   } catch (e) {
-    showError("Sign-in failed: " + (e.message || e));
+    const code = (e && e.errorCode) || "";
+    const msg = (e && e.message) || String(e);
+
+    // User simply closed the popup — just go back to the sign-in screen, no scary error.
+    if (code === "user_cancelled" || /user_cancelled|popup_window_error|popup window closed/i.test(msg)) {
+      backToSignIn();
+      return;
+    }
+
+    // Org requires an admin to approve the app first — explain it calmly with a retry.
+    if (/admin|consent|AADSTS65001|AADSTS90094/i.test(msg)) {
+      backToSignIn(
+        "This app needs a one-time approval from a Microsoft 365 administrator before it " +
+        "can read the document library. Once that's granted, sign-in will work."
+      );
+      return;
+    }
+
+    // Anything else — show it, but keep the retry button.
+    backToSignIn("Sign-in didn't complete. You can try again.");
   }
 }
+
+/* Return to the sign-in screen, optionally with a calm note above the button. */
+function backToSignIn(note) {
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("appContent").style.display = "none";
+  document.getElementById("errorState").style.display = "none";
+  const s = document.getElementById("signinState");
+  s.style.display = "block";
+  const noteEl = document.getElementById("signinNote");
+  if (noteEl) noteEl.textContent = note || "";
 
 async function getToken() {
   try {
@@ -519,13 +673,46 @@ async function startApp() {
     render();
 
     document.getElementById("loadingState").style.display = "none";
-    document.getElementById("appContent").style.display = "block";
+    document.getElementById("appContent").style.display = "flex";
   } catch (e) {
     showError(e.message || String(e));
   }
 }
 
-/* ============================================================
+/* Preview mode: show the full app shell with empty states, no sign-in, no data. */
+function startPreview() {
+  document.getElementById("signinState").style.display = "none";
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("errorState").style.display = "none";
+
+  allDocs = [];
+  buildHead();
+  // filter dropdowns just keep their default "All"
+  document.getElementById("searchBox").oninput = render;
+  document.getElementById("filterArea").onchange = render;
+  document.getElementById("filterGroup").onchange = render;
+  document.getElementById("filterStatus").onchange = render;
+  renderEmpty();
+
+  document.getElementById("appContent").style.display = "flex";
+}
+
+/* Empty-state row shown when there are no documents to display. */
+function renderEmpty() {
+  const body = document.getElementById("tableBody");
+  const cols = COLUMNS.length + 1;
+  body.innerHTML =
+    '<tr class="empty-row"><td colspan="' + cols + '">' +
+      '<div class="empty">' +
+        '<i class="ti ti-folder-open"></i>' +
+        '<h4>No documents to show</h4>' +
+        '<p>This is preview mode — sign-in is bypassed so we can design the screens. ' +
+        'Your live documents will appear here once connected.</p>' +
+      '</div>' +
+    '</td></tr>';
+  const dc = document.getElementById("docCount");
+  if (dc) dc.innerHTML = "<b>0</b> documents";
+}
    RENDERING
    ============================================================ */
 function fld(item, key) {
@@ -627,6 +814,8 @@ function render() {
   const body = document.getElementById("tableBody");
   body.innerHTML = "";
 
+  if (!rows.length) { renderEmpty(); return; }
+
   rows.forEach(d => {
     const tr = document.createElement("tr");
     tr.onclick = () => openPanel(d);
@@ -634,8 +823,17 @@ function render() {
       const td = document.createElement("td");
       let val = fld(d, c.key);
       if (c.type === "date") val = fmtDate(val);
-      td.textContent = val || "";
-      if (c.key === F.status) td.className = "status-pill";
+
+      if (c.key === F.status) {
+        const raw = (val || "").toString();
+        const span = document.createElement("span");
+        span.className = "pill " + statusClass(raw);
+        span.textContent = raw;
+        if (raw) td.appendChild(span);
+      } else {
+        td.textContent = val || "";
+        if (c.key === F.title) td.className = "col-title";
+      }
       tr.appendChild(td);
     });
     // Action cell — open the file
@@ -644,7 +842,8 @@ function render() {
     if (url) {
       const a = document.createElement("a");
       a.className = "open-link";
-      a.href = url; a.target = "_blank"; a.textContent = "Open";
+      a.href = url; a.target = "_blank";
+      a.innerHTML = '<i class="ti ti-external-link"></i>Open';
       a.onclick = e => e.stopPropagation();
       act.appendChild(a);
     }
@@ -652,7 +851,20 @@ function render() {
     body.appendChild(tr);
   });
 
-  document.getElementById("docCount").textContent = "Docs = " + rows.length;
+  const total = allDocs.length;
+  const shown = rows.length;
+  document.getElementById("docCount").innerHTML =
+    shown === total
+      ? "<b>" + total + "</b> documents"
+      : "<b>" + shown + "</b> of " + total + " documents";
+}
+
+function statusClass(s) {
+  const v = (s || "").toLowerCase();
+  if (v.includes("use") || v.includes("approv") || v.includes("active")) return "inuse";
+  if (v.includes("review") || v.includes("valid") || v.includes("pending")) return "review";
+  if (v.includes("draft") || v.includes("new")) return "draft";
+  return "";
 }
 
 /* ============================================================
@@ -757,7 +969,7 @@ function renderTab() {
       row("Backup Administrator", personName(fld(d, F.backupAdmin))) +
       row("Reviewer", personName(fld(d, F.reviewer))) +
       `<div style="margin-top:20px;">
-        <button class="signin-btn" style="background:var(--purple);"
+        <button class="btn-primary"
           onclick="alert('This will call your Power Automate flow (HTTP trigger) — to be wired with the flow URL.')">
           Request</button>
       </div>`;
@@ -777,7 +989,7 @@ function renderTab() {
       row("Any Changes Made?", yn(fld(d, F.anyChanges))) +
       row("To be archived?", yn(fld(d, F.toArchive))) +
       `<div style="margin-top:20px;">
-        <button class="signin-btn" style="background:var(--purple);"
+        <button class="btn-primary"
           onclick="alert('Update writes back to SharePoint / calls your flow — to be wired next.')">
           Update</button>
       </div>`;
