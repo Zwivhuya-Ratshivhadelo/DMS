@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDRMS — Electronic Documents and Records Management System</title>
+
+<!-- MSAL for Microsoft login -->
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+
+<style>
+  :root {
+    --navy: #0a1f5c;
+    --navy-dark: #081848;
+    --purple: #7a3ff2;
+    --purple-dark: #6a2fe0;
+    --line: #e3e3e8;
+    --text: #1c1c22;
+    --muted: #6a6a78;
+    --row-hover: #f5f3ff;
+    --bg: #fbfbfd;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 14px;
+  }
+
+  /* Header */
+  .header {
+    background: var(--navy);
+    color: #fff;
+    text-align: center;
+    padding: 22px 16px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .shell { display: flex; min-height: calc(100vh - 68px); }
+
+  /* Left nav */
+  .nav {
+    width: 230px;
+    flex-shrink: 0;
+    padding: 20px 16px;
+    border-right: 1px solid var(--line);
+  }
+  .nav button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .nav button.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .nav .count { margin-top: 30px; text-align: center; color: var(--muted); font-weight: 600; }
+
+  /* Main */
+  .main { flex: 1; padding: 22px 26px; overflow: hidden; }
+
+  /* Filter bar */
+  .filters {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 14px 22px;
+    align-items: end;
+    margin-bottom: 22px;
+  }
+  .field label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px; }
+  .field select, .field input {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #f3f3f6;
+    font-size: 14px;
+  }
+
+  /* Table */
+  .table-wrap { overflow: auto; max-height: calc(100vh - 250px); border-top: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky; top: 0;
+    background: #fff;
+    text-align: left;
+    padding: 12px 10px;
+    font-weight: 700;
+    color: #4a4a55;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  thead th .arrow { color: var(--purple); font-size: 11px; }
+  tbody td { padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); }
+  .status-pill { font-size: 12px; color: var(--muted); }
+  .open-link {
+    color: var(--purple); font-weight: 600; text-decoration: none;
+    border: 1px solid var(--line); border-radius: 4px; padding: 5px 12px; font-size: 13px;
+  }
+  .open-link:hover { background: var(--purple); color: #fff; }
+
+  /* States */
+  .state { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .state h3 { color: var(--text); font-weight: 700; margin-bottom: 8px; }
+  .spinner {
+    width: 34px; height: 34px; border: 3px solid var(--line);
+    border-top-color: var(--purple); border-radius: 50%;
+    margin: 0 auto 18px; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .signin-btn {
+    background: var(--navy); color: #fff; border: none; border-radius: 6px;
+    padding: 13px 26px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .signin-btn:hover { background: var(--navy-dark); }
+
+  /* Detail panel (slide-over) */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(10,20,40,0.45);
+    display: none; z-index: 50;
+  }
+  .overlay.show { display: block; }
+  .panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(880px, 94vw);
+    background: #fff; z-index: 51; transform: translateX(100%);
+    transition: transform 0.25s ease; display: flex; flex-direction: column;
+  }
+  .panel.show { transform: translateX(0); }
+  .panel-head { background: var(--navy); color: #fff; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; }
+  .panel-head .x { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+  .tabs { display: flex; gap: 8px; padding: 14px 22px 0; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  .tabs button {
+    background: #fff; border: 1px solid var(--line); border-bottom: none;
+    border-radius: 6px 6px 0 0; padding: 10px 16px; font-weight: 600; cursor: pointer; font-size: 13px;
+  }
+  .tabs button.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .tab-body { padding: 22px; overflow: auto; flex: 1; }
+  .detail-row { display: grid; grid-template-columns: 220px 1fr; padding: 11px 0; border-bottom: 1px solid #f0f0f3; gap: 16px; }
+  .detail-row .k { font-weight: 700; color: #3a3a44; }
+  .detail-row .v { color: var(--text); }
+  .open-big {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 6px; padding: 14px 28px;
+    color: var(--purple); font-weight: 700; text-decoration: none; font-size: 16px;
+  }
+  .open-big:hover { background: var(--purple); color: #fff; }
+  .yn-yes { color: #0f6e56; font-weight: 700; }
+  .yn-no  { color: #a32d2d; font-weight: 700; }
+  .muted-note { color: var(--muted); font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">Electronic Documents and Records Management System (EDRMS)</div>
+
+<div class="shell">
+  <nav class="nav">
+    <button class="active">Documents</button>
+    <button onclick="alert('My Actions — to be wired next')">My Actions</button>
+    <button onclick="alert('Areas — to be wired next')">Areas</button>
+    <button onclick="alert('Request to create new Document — to be wired next')">Request to create new Document</button>
+    <button onclick="alert('Procedure — to be wired next')">Procedure</button>
+    <button onclick="alert('Process Flow — to be wired next')">Process Flow</button>
+    <button onclick="alert('Training — to be wired next')">Training</button>
+    <div class="count" id="docCount"></div>
+  </nav>
+
+  <main class="main" id="main">
+    <!-- Sign-in state shown first -->
+    <div class="state" id="signinState">
+      <h3>Sign in to view your documents</h3>
+      <p style="margin-bottom:22px;">Use your Safripol Microsoft account.</p>
+      <button class="signin-btn" id="signinBtn">Sign in with Microsoft</button>
+    </div>
+
+    <!-- App content (hidden until signed in) -->
+    <div id="appContent" style="display:none;">
+      <div class="filters">
+        <div class="field">
+          <label>Search</label>
+          <input type="text" id="searchBox" placeholder="Search title or file name…">
+        </div>
+        <div class="field">
+          <label>Area</label>
+          <select id="filterArea"><option value="">All</option></select>
+        </div>
+        <div class="field">
+          <label>Group</label>
+          <select id="filterGroup"><option value="">All</option></select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="filterStatus"><option value="">All</option></select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr id="headRow"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="state" id="loadingState" style="display:none;">
+      <div class="spinner"></div>
+      <p id="loadingText">Loading documents…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="state" id="errorState" style="display:none;">
+      <h3>Couldn't load documents</h3>
+      <p id="errorText"></p>
+    </div>
+  </main>
+</div>
+
+<!-- Detail slide-over -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <span id="panelTitle" style="font-weight:700;font-size:16px;"></span>
+    <button class="x" onclick="closePanel()">&times;</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="tab-body" id="tabBody"></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG  —  these come from your Entra ID app registration
+   ============================================================ */
+const CONFIG = {
+  clientId: "db5f7e01-4cd3-4b99-ab41-1b08ebbb3ca5",
+  tenantId: "005c07f2-1812-40a9-82ec-700570a99bff",
+  // hostname + server-relative path of your site
+  siteHost: "safripol365.sharepoint.com",
+  sitePath: "/sites/DigitalProject",
+  libraryName: "Digital Project",
+  // redirect URI — must match what's registered in Entra ID
+  redirectUri: window.location.origin + window.location.pathname
+};
+
+/* ============================================================
+   FIELD MAP  —  SharePoint INTERNAL names.
+   These are best-guesses from your column display names.
+   SharePoint replaces spaces with _x0020_ and ? is dropped, etc.
+   If a column shows blank in the app, fix its internal name here.
+   (We can confirm exact internal names from the library settings URL.)
+   ============================================================ */
+const F = {
+  area:         "Functional_x0020_Area",
+  group:        "Group",
+  docType:      "Document_x0020_Type",
+  category:     "Category",
+  title:        "Title",
+  classification:"Classification",
+  status:       "Status",
+  site:         "Site",
+  folder:       "Folder",
+  latestRev:    "Latest_x0020_Revision",
+  nextRev:      "Next_x0020_Revision",
+  reviewStart:  "ReviewStartDate",
+  freqReview:   "Frequency_x0020_Of_x0020_Review",
+  reviewer:     "Reviewer",
+  validator:    "Validator",
+  approver:     "Approver",
+  administrator:"Administrator",
+  backupAdmin:  "Backup_x0020_Administrator",
+  remarks:      "Document_x0020_Remarks",
+  revRules:     "Revision_x002f_Review_x0020_Rules",
+  retentionRules:"Retention_x0020_Rules_x0020__x0028_Records_x0020_Management_x0029_",
+  validated:    "Validated_x003f_",
+  reviewed:     "Reviewed_x003f_",
+  approved:     "Approved_x003f_",
+  anyChanges:   "Any_x0020_Changes_x0020_Made_x003f_",
+  toArchive:    "Document_x0020_to_x0020_be_x0020_archived_x003f_",
+  approvedUrl:  "ApprovedURL",
+  approvedId:   "ApprovedID",
+  originalId:   "OriginalID",
+  reasonEdit:   "Reason_x0020_for_x0020_request_x0020_to_x0020_Edit_x002f_Review_x002f_Revise_x0020_Document"
+};
+
+/* ============================================================
+   MSAL setup
+   ============================================================ */
+const msalConfig = {
+  auth: {
+    clientId: CONFIG.clientId,
+    authority: "https://login.microsoftonline.com/" + CONFIG.tenantId,
+    redirectUri: CONFIG.redirectUri
+  },
+  cache: { cacheLocation: "sessionStorage" }
+};
+const SCOPES = ["User.Read", "Sites.Read.All"];
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+let account = null;
+let allDocs = [];          // raw items from Graph
+let siteId = null;
+let listId = null;
+
+/* ----- column definitions for the main table ----- */
+const COLUMNS = [
+  { key: F.area,      label: "Area" },
+  { key: F.group,     label: "Group" },
+  { key: F.docType,   label: "Type" },
+  { key: F.category,  label: "Category" },
+  { key: F.title,     label: "Title" },
+  { key: F.latestRev, label: "Last Revision", type: "date" },
+  { key: F.nextRev,   label: "Next Revision", type: "date" },
+  { key: F.status,    label: "Status" }
+];
+let sortKey = F.title;
+let sortDir = 1;
+
+/* ============================================================
+   AUTH FLOW
+   ============================================================ */
+document.getElementById("signinBtn").onclick = signIn;
+
+async function init() {
+  try {
+    const resp = await msalInstance.handleRedirectPromise();
+    if (resp && resp.account) account = resp.account;
+    else {
+      const accts = msalInstance.getAllAccounts();
+      if (accts.length) account = accts[0];
+    }
+  } catch (e) { console.error(e); }
+
+  if (account) { startApp(); }
+}
+
+async function signIn() {
+  try {
+    const resp = await msalInstance.loginPopup({ scopes: SCOPES });
+    account = resp.account;
+    startApp();
+  } catch (e) {
+    showError("Sign-in failed: " + (e.message || e));
+  }
+}
+
+async function getToken() {
+  try {
+    const r = await msalInstance.acquireTokenSilent({ scopes: SCOPES, account });
+    return r.accessToken;
+  } catch (e) {
+    const r = await msalInstance.acquireTokenPopup({ scopes: SCOPES });
+    return r.accessToken;
+  }
+}
+
+/* ============================================================
+   GRAPH CALLS
+   ============================================================ */
+async function graphGet(url, token) {
+  const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error("Graph " + res.status + ": " + body.slice(0, 300));
+  }
+  return res.json();
+}
+
+async function startApp() {
+  document.getElementById("signinState").style.display = "none";
+  document.getElementById("appContent").style.display = "none";
+  document.getElementById("loadingState").style.display = "block";
+
+  try {
+    const token = await getToken();
+
+    // 1. resolve site id
+    setLoading("Connecting to SharePoint…");
+    const site = await graphGet(
+      `https://graph.microsoft.com/v1.0/sites/${CONFIG.siteHost}:${CONFIG.sitePath}`, token);
+    siteId = site.id;
+
+    // 2. find the list (library) id by display name
+    setLoading("Finding the document library…");
+    const lists = await graphGet(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists?$select=id,name,displayName`, token);
+    const lib = lists.value.find(l =>
+      l.displayName === CONFIG.libraryName || l.name === CONFIG.libraryName);
+    if (!lib) throw new Error('Library "' + CONFIG.libraryName + '" not found on the site.');
+    listId = lib.id;
+
+    // 3. page through all items, expanding fields + the driveItem (for file name + url)
+    setLoading("Loading documents…");
+    allDocs = [];
+    let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items`
+            + `?expand=fields,driveItem&$top=500`;
+    while (url) {
+      const page = await graphGet(url, token);
+      allDocs.push(...page.value);
+      setLoading("Loading documents… (" + allDocs.length + ")");
+      url = page["@odata.nextLink"] || null;
+    }
+
+    buildFilters();
+    buildHead();
+    render();
+
+    document.getElementById("loadingState").style.display = "none";
+    document.getElementById("appContent").style.display = "block";
+  } catch (e) {
+    showError(e.message || String(e));
+  }
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function fld(item, key) {
+  const f = item.fields || {};
+  return f[key];
+}
+
+function fmtDate(v) {
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d)) return v;
+  return d.toISOString().slice(0,10).replace(/-/g, "/");
+}
+
+function personName(v) {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (v.LookupValue) return v.LookupValue;
+  if (v.Title) return v.Title;
+  if (v.DisplayName) return v.DisplayName;
+  return JSON.stringify(v);
+}
+
+function uniqueValues(key) {
+  const set = new Set();
+  allDocs.forEach(d => { const v = fld(d, key); if (v) set.add(v); });
+  return [...set].sort();
+}
+
+function buildFilters() {
+  fillSelect("filterArea", uniqueValues(F.area));
+  fillSelect("filterGroup", uniqueValues(F.group));
+  fillSelect("filterStatus", uniqueValues(F.status));
+  document.getElementById("searchBox").oninput = render;
+  document.getElementById("filterArea").onchange = render;
+  document.getElementById("filterGroup").onchange = render;
+  document.getElementById("filterStatus").onchange = render;
+}
+
+function fillSelect(id, values) {
+  const sel = document.getElementById(id);
+  values.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+function buildHead() {
+  const tr = document.getElementById("headRow");
+  tr.innerHTML = "";
+  COLUMNS.forEach(c => {
+    const th = document.createElement("th");
+    th.textContent = c.label + " ";
+    if (sortKey === c.key) {
+      const a = document.createElement("span");
+      a.className = "arrow";
+      a.textContent = sortDir === 1 ? "▲" : "▼";
+      th.appendChild(a);
+    }
+    th.onclick = () => {
+      if (sortKey === c.key) sortDir *= -1;
+      else { sortKey = c.key; sortDir = 1; }
+      buildHead(); render();
+    };
+    tr.appendChild(th);
+  });
+  const th = document.createElement("th");
+  th.textContent = "Action";
+  tr.appendChild(th);
+}
+
+function getFiltered() {
+  const q = document.getElementById("searchBox").value.toLowerCase().trim();
+  const fa = document.getElementById("filterArea").value;
+  const fg = document.getElementById("filterGroup").value;
+  const fs = document.getElementById("filterStatus").value;
+
+  let rows = allDocs.filter(d => {
+    const title = (fld(d, F.title) || "").toLowerCase();
+    const name = (d.driveItem && d.driveItem.name || "").toLowerCase();
+    if (q && !title.includes(q) && !name.includes(q)) return false;
+    if (fa && fld(d, F.area) !== fa) return false;
+    if (fg && fld(d, F.group) !== fg) return false;
+    if (fs && fld(d, F.status) !== fs) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    const av = (fld(a, sortKey) || "").toString().toLowerCase();
+    const bv = (fld(b, sortKey) || "").toString().toLowerCase();
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+  return rows;
+}
+
+function render() {
+  const rows = getFiltered();
+  const body = document.getElementById("tableBody");
+  body.innerHTML = "";
+
+  rows.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.onclick = () => openPanel(d);
+    COLUMNS.forEach(c => {
+      const td = document.createElement("td");
+      let val = fld(d, c.key);
+      if (c.type === "date") val = fmtDate(val);
+      td.textContent = val || "";
+      if (c.key === F.status) td.className = "status-pill";
+      tr.appendChild(td);
+    });
+    // Action cell — open the file
+    const act = document.createElement("td");
+    const url = fld(d, F.approvedUrl) || (d.driveItem && d.driveItem.webUrl);
+    if (url) {
+      const a = document.createElement("a");
+      a.className = "open-link";
+      a.href = url; a.target = "_blank"; a.textContent = "Open";
+      a.onclick = e => e.stopPropagation();
+      act.appendChild(a);
+    }
+    tr.appendChild(act);
+    body.appendChild(tr);
+  });
+
+  document.getElementById("docCount").textContent = "Docs = " + rows.length;
+}
+
+/* ============================================================
+   DETAIL PANEL  (5 tabs, matching the PowerApps version)
+   ============================================================ */
+let currentDoc = null;
+let currentTab = "view";
+
+function openPanel(d) {
+  currentDoc = d;
+  currentTab = "view";
+  document.getElementById("panelTitle").textContent =
+    fld(d, F.title) || (d.driveItem && d.driveItem.name) || "Document";
+  buildTabs();
+  renderTab();
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("panel").classList.add("show");
+}
+function closePanel() {
+  document.getElementById("overlay").classList.remove("show");
+  document.getElementById("panel").classList.remove("show");
+}
+
+const TABS = [
+  { id: "view",    label: "View Document & Records" },
+  { id: "details", label: "Document Details" },
+  { id: "history", label: "Document History" },
+  { id: "review",  label: "Request Review" },
+  { id: "flow",    label: "Manage Flow" }
+];
+
+function buildTabs() {
+  const t = document.getElementById("tabs");
+  t.innerHTML = "";
+  TABS.forEach(tab => {
+    const b = document.createElement("button");
+    b.textContent = tab.label;
+    if (tab.id === currentTab) b.className = "active";
+    b.onclick = () => { currentTab = tab.id; buildTabs(); renderTab(); };
+    t.appendChild(b);
+  });
+}
+
+function row(k, v) {
+  return `<div class="detail-row"><div class="k">${k}</div><div class="v">${v ?? ""}</div></div>`;
+}
+function yn(v) {
+  if (v === true || v === "Yes" || v === 1) return '<span class="yn-yes">Yes</span>';
+  if (v === false || v === "No" || v === 0) return '<span class="yn-no">No</span>';
+  return v || "";
+}
+
+function renderTab() {
+  const d = currentDoc;
+  const body = document.getElementById("tabBody");
+  const url = fld(d, F.approvedUrl) || (d.driveItem && d.driveItem.webUrl);
+
+  if (currentTab === "view") {
+    body.innerHTML =
+      `<div style="text-align:center;padding:30px 0;">
+         ${url ? `<a class="open-big" href="${url}" target="_blank">Open &#8599;</a>`
+               : `<p class="muted-note">No file link available for this record.</p>`}
+       </div>
+       ${row("File Name", d.driveItem ? d.driveItem.name : "")}
+       ${row("Revision", fld(d, F.latestRev) ? fmtDate(fld(d, F.latestRev)) : "")}
+       ${row("Retain Until", fmtDate(fld(d, F.nextRev)))}`;
+  }
+
+  else if (currentTab === "details") {
+    body.innerHTML =
+      row("Name", d.driveItem ? d.driveItem.name : "") +
+      row("Functional Area", fld(d, F.area)) +
+      row("Group", fld(d, F.group)) +
+      row("Document Type", fld(d, F.docType)) +
+      row("Category", fld(d, F.category)) +
+      row("Classification", fld(d, F.classification)) +
+      row("Status", fld(d, F.status)) +
+      row("Administrator", personName(fld(d, F.administrator))) +
+      row("Backup Administrator", personName(fld(d, F.backupAdmin))) +
+      row("Latest Revision", fmtDate(fld(d, F.latestRev))) +
+      row("Next Revision", fmtDate(fld(d, F.nextRev))) +
+      row("Document Remarks", fld(d, F.remarks)) +
+      row("Approved ID", fld(d, F.approvedId)) +
+      row("Original ID", fld(d, F.originalId));
+  }
+
+  else if (currentTab === "history") {
+    body.innerHTML =
+      `<p class="muted-note">History comes from your version/audit list. 
+       Once you confirm where history is stored we wire it here.</p>` +
+      row("Latest Revision", fmtDate(fld(d, F.latestRev))) +
+      row("Status", fld(d, F.status)) +
+      row("Remarks", fld(d, F.remarks));
+  }
+
+  else if (currentTab === "review") {
+    body.innerHTML =
+      `<p class="muted-note" style="margin-bottom:18px;">
+        This request to Review/Revise the Document will be sent to the Administrator and Backup
+        Administrator. The document will go to your Reviews and you'll be notified.</p>` +
+      row("Administrator", personName(fld(d, F.administrator))) +
+      row("Backup Administrator", personName(fld(d, F.backupAdmin))) +
+      row("Reviewer", personName(fld(d, F.reviewer))) +
+      `<div style="margin-top:20px;">
+        <button class="signin-btn" style="background:var(--purple);"
+          onclick="alert('This will call your Power Automate flow (HTTP trigger) — to be wired with the flow URL.')">
+          Request</button>
+      </div>`;
+  }
+
+  else if (currentTab === "flow") {
+    body.innerHTML =
+      row("Status", fld(d, F.status)) +
+      row("Reviewer", personName(fld(d, F.reviewer))) +
+      row("Validator", personName(fld(d, F.validator))) +
+      row("Approver", personName(fld(d, F.approver))) +
+      row("Document Remarks", fld(d, F.remarks)) +
+      row("Next Revision", fmtDate(fld(d, F.nextRev))) +
+      row("Validated?", yn(fld(d, F.validated))) +
+      row("Reviewed?", yn(fld(d, F.reviewed))) +
+      row("Approved?", yn(fld(d, F.approved))) +
+      row("Any Changes Made?", yn(fld(d, F.anyChanges))) +
+      row("To be archived?", yn(fld(d, F.toArchive))) +
+      `<div style="margin-top:20px;">
+        <button class="signin-btn" style="background:var(--purple);"
+          onclick="alert('Update writes back to SharePoint / calls your flow — to be wired next.')">
+          Update</button>
+      </div>`;
+  }
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function setLoading(msg) { document.getElementById("loadingText").textContent = msg; }
+function showError(msg) {
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("signinState").style.display = "none";
+  document.getElementById("appContent").style.display = "none";
+  const e = document.getElementById("errorState");
+  e.style.display = "block";
+  document.getElementById("errorText").textContent = msg;
+}
+
+init();
+</script>
+</body>
+</html>
