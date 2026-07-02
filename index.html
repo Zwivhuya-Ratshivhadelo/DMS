@@ -3,18 +3,19 @@
 <head>
     <meta charset="utf-8">
     <title>DMS Test</title>
+
+    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 </head>
 <body>
 
 <h2>DMS Test</h2>
 
-<button id="btnLogin">Login</button>
+<button id="loginBtn">Login</button>
 
-<div id="result"></div>
-
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<p id="result"></p>
 
 <script>
+
 const msalConfig = {
     auth: {
         clientId: "db5f7e01-4cd3-4b99-ab41-1b08ebbb3ca5",
@@ -25,7 +26,7 @@ const msalConfig = {
 
 const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-document.getElementById("btnLogin").addEventListener("click", async function () {
+document.getElementById("loginBtn").addEventListener("click", async () => {
 
     try {
 
@@ -36,16 +37,18 @@ document.getElementById("btnLogin").addEventListener("click", async function () 
         document.getElementById("result").innerHTML =
             "Logged in as: " + loginResponse.account.username;
 
-    }
-    catch (err) {
+    } catch (error) {
 
-        console.error(err);
+        console.error(error);
 
         document.getElementById("result").innerHTML =
-            err.message;
+            error.message;
     }
+
 });
+
 </script>
 
 </body>
 </html>
+`
